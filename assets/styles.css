@@ -1,0 +1,158 @@
+body {
+    background-color: rgba(31, 42, 31, 0.8);
+    color: black;
+    font-family: sans-serif;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.app-header {
+    margin-left: 32px;
+    margin-top: 32px;
+    font-weight: 2;
+}
+
+.about-me {
+    padding: 16px;
+    text-align: center;
+}
+
+.upper-container {
+    display: flex;
+    justify-content: space-around;
+}
+
+.map-container {
+    width: 55%;
+    margin-top: 0px;
+}
+
+.analytics-container {
+    width: 40%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.analytics-container p {
+    text-align: center;
+}
+
+.graph-container {
+    width: 100%;
+    height: 45vh;
+    margin-bottom: 1rem;
+}
+
+.graph {
+    height: 100%;
+}
+
+.data-rep-container {
+    display: flex;
+    justify-content: space-around !important;
+    align-items: baseline;
+    width: 100%;
+    margin-top: 24px;
+    margin-bottom: 0;
+}
+
+.map-options-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.map-option {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 30%;
+}
+
+.dropdown-header {
+    text-align: center;
+    text-shadow: 4px 4x 2px rgba(0,0,0,0.2);
+    font-size: 1rem;
+    padding: 1rem;
+}
+
+.dash-dropdown { /* It seems you are not allowed to style dropdowns by adding your own class name.*/
+    width: 80%;
+    box-shadow: 4px 4px 4px rgba(0,0,0,0.2);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.lower-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.datatable-container {
+    width: 90%;
+    justify-content: center;
+}
+
+.table-header {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.missing-data-alert {
+    position: fixed;
+    top: 50px;
+    right: 20px;
+    border-radius: 0;
+}
+
+.graph-reset-button {
+    width: 30%;
+    text-align: center;
+    align-self: center;
+}
+
+/*
+   Dash Gauge classes.
+*/
+.jjZFEi {
+    font-size: 24px !important;
+}
+
+.cAPXWV {
+    color: black !important;
+}
+
+.dHABtm {
+    font-size: 16px !important;
+    color: black !important;
+}
+
+.cRfgdB .scale {
+    fill: black !important;
+}
+
+/*
+    Gauge label
+*/
+.hiuTRN {
+    margin-top: 36px !important;
+}
+
+@media screen and (max-width: 1080px) {
+    .upper-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .map-container {
+        margin-top: 0;
+        width: 90%;
+    }
+
+    .analytics-container{
+        width: 90%;
+        margin-top: 48px;
+    }
+}
