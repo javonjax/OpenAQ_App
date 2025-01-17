@@ -20,6 +20,8 @@ from dotenv import load_dotenv
 load_dotenv()
 API_KEY = os.getenv('OPENAQ_API_KEY')
 ACCESS_TOKEN = os.getenv('MAPBOX_ACCESS_TOKEN')
+GITHUB = os.getenv('GITHUB')
+LINKEDIN = os.getenv('LINKEDIN')
 
 # URLs for making requests to the OpenAQ API.
 URL_PM_DATA = 'https://api.openaq.org/v2/locations?limit=1000'
@@ -319,7 +321,6 @@ def generate_graph(data, pollutant):
                                          color='lightgreen')
                                      )
                           )
-
     graph_fig.update_layout(
         margin={'l': 40,
                 'r': 40,
@@ -520,374 +521,359 @@ def get_averages(data):
     return average_last_24_hours, average_last_7_days
 
 
-def main():
-    """
-    Main function for running the air quality application.
-    """
-    # Retrieve data from API.
-    success, response = get_pm_data()
-    pm25_data = []
-    pm10_data = []
+# Build app.
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, '/assets/styles.css'],
+           suppress_callback_exceptions=True)
+app.title = 'Global Air Quality Dashboard'
 
-    if not success:
-        print(response)
-        sys.exit(1)
-    else:
-        pm25_data = response[0]
-        pm10_data = response[1]
+# Retrieve data from API.
+success, response = get_pm_data()
+pm25_data = []
+pm10_data = []
 
-    # Build app.
-    app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, '/assets/styles.css'],
-               suppress_callback_exceptions=True)
-    app.title = 'Global Air Quality Dashboard'
+if not success:
+    print(response)
+    sys.exit(1)
+else:
+    pm25_data = response[0]
+    pm10_data = response[1]
 
-    # TODO: FAQ, about me, links with dbc.modal and dbc breadcrumb
+DEFAULT_MAP_FIGURE = generate_map(pm25_data, 'PM 2.5', 'Markers')
+DEFAULT_TABLE = generate_table(pm25_data, 'PM 2.5')
 
-    DEFAULT_MAP_FIGURE = generate_map(pm25_data, 'PM 2.5', 'Markers')
-    DEFAULT_TABLE = generate_table(pm25_data, 'PM 2.5')
+app.layout = html.Div([
+    dcc.Store(id='pollutant-data-store'),
+    html.H1(className='app-header', children='Global Air Quality Dashboard'),
 
-    app.layout = html.Div([
-        dcc.Store(id='pollutant-data-store'),
-        html.H1(className='app-header', children='Global Air Quality Dashboard'),
-
-        html.Div(className='upper-container',
-                 children=
-                 [
-                     html.Div(
-                         className='map-container',
-                         children=
-                         [
-                             dcc.Loading(
-                                 dcc.Graph(id='map-figure', figure=DEFAULT_MAP_FIGURE, style={'height': '65vh'}),
-                                 delay_hide=300
-                             ),
-                             html.Div(className='map-options-container',
-                                      children=
-                                      [
-                                          html.Div(
-                                              className='map-option',
-                                              children=[
-                                                  html.H3('Pollutant', className='dropdown-header'),
-                                                  dcc.Dropdown(id='pollutant-dropdown',
-                                                               options=[{'label': 'PM 2.5', 'value': 'PM 2.5'},
-                                                                        {'label': 'PM 10', 'value': 'PM 10'}
-                                                                        ],
-                                                               value='PM 2.5',
-                                                               optionHeight=50,
-                                                               maxHeight=100,
-                                                               clearable=False)
-                                              ]
-                                          ),
-
-                                          html.Div(
-                                              className='map-option',
-                                              children=[
-                                                  html.H3('Region Focus', className='dropdown-header'),
-                                                  dcc.Dropdown(id='region-dropdown',
-                                                               options=[{'label': 'Show All',
-                                                                         'value': 'Show All'},
-                                                                        {'label': 'North America',
-                                                                         'value': 'North America'},
-                                                                        {'label': 'Central America',
-                                                                         'value': 'Central America'},
-                                                                        {'label': 'South America',
-                                                                         'value': 'South America'},
-                                                                        {'label': 'Europe',
-                                                                         'value': 'Europe'},
-                                                                        {'label': 'Africa',
-                                                                         'value': 'Africa'},
-                                                                        {'label': 'Asia',
-                                                                         'value': 'Asia'},
-                                                                        {'label': 'Oceania',
-                                                                         'value': 'Oceania'}
-                                                                        ],
-                                                               value='Show All',
-                                                               optionHeight=50,
-                                                               maxHeight=100,
-                                                               clearable=False)
-                                              ]
-                                          ),
-
-                                          html.Div(
-                                              className='map-option',
-                                              children=[
-                                                  html.H3('Map Display', className='dropdown-header'),
-                                                  dcc.Dropdown(id='display-type-dropdown',
-                                                               options=[{'label': 'Markers', 'value': 'Markers'},
-                                                                        {'label': 'Density Heatmap', 'value': 'Heatmap'}
-                                                                        ],
-                                                               value='Markers',
-                                                               optionHeight=50,
-                                                               maxHeight=100,
-                                                               clearable=False)
-                                              ]
-                                          )
-                                      ]
+    html.Div(className='upper-container',
+             children=
+             [
+                 html.Div(
+                     className='map-container',
+                     children=
+                     [
+                         dcc.Loading(
+                             dcc.Graph(id='map-figure', figure=DEFAULT_MAP_FIGURE, style={'height': '65vh'}),
+                             delay_hide=300
+                         ),
+                         html.Div(className='map-options-container',
+                                  children=
+                                  [
+                                      html.Div(
+                                          className='map-option',
+                                          children=[
+                                              html.H3('Pollutant', className='dropdown-header'),
+                                              dcc.Dropdown(id='pollutant-dropdown',
+                                                           options=[{'label': 'PM 2.5', 'value': 'PM 2.5'},
+                                                                    {'label': 'PM 10', 'value': 'PM 10'}
+                                                                    ],
+                                                           value='PM 2.5',
+                                                           optionHeight=50,
+                                                           maxHeight=100,
+                                                           clearable=False)
+                                          ]
                                       ),
-                         ]
-                     ),
 
-                     html.Div(
-                         className='analytics-container',
-                         children=[
-                             html.P(
-                                 'Click a marker on the map or a row on the table to show recent data from that location.'),
-                             dcc.Loading(
-                                 html.Div(
-                                     id='graph-figure',
-                                     className='graph-container'
-                                 ),
-                                 delay_hide=300
-                             ),
-                             dbc.Alert(
-                                 className='missing-data-alert',
-                                 id='analytics-data-alert',
-                                 color='warning',
-                                 is_open=False,
-                                 dismissable=True,
-                                 duration=20000
-                             ),
-                             html.Div(
-                                 className='data-rep-container',
-                                 children=[
-                                     daq.Gauge(
-                                         id='pollutant-gauge-24hr',
-                                         label='24 Hour Average (µg/m³)',
-                                         labelPosition='bottom',
-                                         min=0,
-                                         max=250,
-                                         showCurrentValue=True,
-                                         value=0,
-                                         size=150,
-                                         color=dict(
-                                             gradient=True,
-                                             ranges={
-                                                 "green": [0, 12.1],
-                                                 "yellow": [12.1, 35.5],
-                                                 "orange": [35.5, 55.5],
-                                                 "red": [55.5, 150.5],
-                                                 "purple": [150.5, 250]
-                                             }
-                                         ),
-                                         style={'display': 'block'}
-                                     ),
-                                     html.Div(daq.Gauge(
-                                         id='pollutant-gauge-7day',
-                                         label='7 Day Average (µg/m³)',
-                                         labelPosition='bottom',
-                                         min=0,
-                                         max=250,
-                                         showCurrentValue=True,
-                                         value=0,
-                                         size=150,
-                                         color=dict(
-                                             gradient=True,
-                                             ranges={
-                                                 "green": [0, 12.1],
-                                                 "yellow": [12.1, 35.5],
-                                                 "orange": [35.5, 55.5],
-                                                 "red": [55.5, 150.5],
-                                                 "purple": [150.5, 250]
-                                             }
-                                         )
-                                     ))
-                                 ]
-                             )
+                                      html.Div(
+                                          className='map-option',
+                                          children=[
+                                              html.H3('Region Focus', className='dropdown-header'),
+                                              dcc.Dropdown(id='region-dropdown',
+                                                           options=[{'label': 'Show All',
+                                                                     'value': 'Show All'},
+                                                                    {'label': 'North America',
+                                                                     'value': 'North America'},
+                                                                    {'label': 'Central America',
+                                                                     'value': 'Central America'},
+                                                                    {'label': 'South America',
+                                                                     'value': 'South America'},
+                                                                    {'label': 'Europe',
+                                                                     'value': 'Europe'},
+                                                                    {'label': 'Africa',
+                                                                     'value': 'Africa'},
+                                                                    {'label': 'Asia',
+                                                                     'value': 'Asia'},
+                                                                    {'label': 'Oceania',
+                                                                     'value': 'Oceania'}
+                                                                    ],
+                                                           value='Show All',
+                                                           optionHeight=50,
+                                                           maxHeight=100,
+                                                           clearable=False)
+                                          ]
+                                      ),
 
-                         ]
-                     )
-                 ]
+                                      html.Div(
+                                          className='map-option',
+                                          children=[
+                                              html.H3('Map Display', className='dropdown-header'),
+                                              dcc.Dropdown(id='display-type-dropdown',
+                                                           options=[{'label': 'Markers', 'value': 'Markers'},
+                                                                    {'label': 'Density Heatmap', 'value': 'Heatmap'}
+                                                                    ],
+                                                           value='Markers',
+                                                           optionHeight=50,
+                                                           maxHeight=100,
+                                                           clearable=False)
+                                          ]
+                                      )
+                                  ]
+                                  ),
+                     ]
                  ),
-        html.Div(
-            className='lower-container',
-            children=[
-                html.Div(
-                    id='datatable-container',
-                    className='datatable-container',
-                    children=[
-                        DEFAULT_TABLE
-                    ]
-                )
-            ]
-        ),
-        html.Div(
-            className='about-me',
-            children=[
-                html.Div('Created by Javon Jackson')
-            ]
-        )
-    ])
 
-    # Callback functions that update the Dash components.
-    @callback(
-        Output('pollutant-data-store', 'data'),
-        Input('pollutant-dropdown', 'value')
+                 html.Div(
+                     className='analytics-container',
+                     children=[
+                         html.P(
+                             'Click a marker on the map or a row on the table to show recent data from that location.'),
+                         dcc.Loading(
+                             html.Div(
+                                 id='graph-figure',
+                                 className='graph-container'
+                             ),
+                             delay_hide=300
+                         ),
+                         dbc.Alert(
+                             className='missing-data-alert',
+                             id='analytics-data-alert',
+                             color='warning',
+                             is_open=False,
+                             dismissable=True,
+                             duration=20000
+                         ),
+                         html.Div(
+                             className='data-rep-container',
+                             children=[
+                                 daq.Gauge(
+                                     id='pollutant-gauge-24hr',
+                                     label='24 Hour Average (µg/m³)',
+                                     labelPosition='bottom',
+                                     min=0,
+                                     max=250,
+                                     showCurrentValue=True,
+                                     value=0,
+                                     size=150,
+                                     color=dict(
+                                         gradient=True,
+                                         ranges={
+                                             "green": [0, 12.1],
+                                             "yellow": [12.1, 35.5],
+                                             "orange": [35.5, 55.5],
+                                             "red": [55.5, 150.5],
+                                             "purple": [150.5, 250]
+                                         }
+                                     ),
+                                     style={'display': 'block'}
+                                 ),
+                                 html.Div(daq.Gauge(
+                                     id='pollutant-gauge-7day',
+                                     label='7 Day Average (µg/m³)',
+                                     labelPosition='bottom',
+                                     min=0,
+                                     max=250,
+                                     showCurrentValue=True,
+                                     value=0,
+                                     size=150,
+                                     color=dict(
+                                         gradient=True,
+                                         ranges={
+                                             "green": [0, 12.1],
+                                             "yellow": [12.1, 35.5],
+                                             "orange": [35.5, 55.5],
+                                             "red": [55.5, 150.5],
+                                             "purple": [150.5, 250]
+                                         }
+                                     )
+                                 ))
+                             ]
+                         )
+
+                     ]
+                 )
+             ]
+             ),
+    html.Div(
+        className='lower-container',
+        children=[
+            html.Div(
+                id='datatable-container',
+                className='datatable-container',
+                children=[
+                    DEFAULT_TABLE
+                ]
+            )
+        ]
+    ),
+    html.Div(
+        style={"width": "100%", "display": "flex", "justify-content": "center"},
+        children=[
+            html.Footer(
+                className='about-me',
+                children=[
+                    html.Div('Created by Javon Jackson'),
+                    html.Div(
+                        className='external-links',
+                        children=[
+                            html.A(
+                                style={"width": "50px", "height": "50px", "padding": "4px"},
+                                target='_blank',
+                                href=GITHUB,
+                                children=[
+                                    html.Img(
+                                        src='/assets/github-brands-solid.svg',
+                                    )
+                                ]
+                            ),
+                            html.A(
+                                style={"width": "50px", "height": "50px", "padding": "4px"},
+                                target='_blank',
+                                href=LINKEDIN,
+                                children=[
+                                    html.Img(
+                                        src='/assets/linkedin-brands-solid.svg',
+                                    )
+                                ]
+                            )]
+                    )
+                ]
+            )
+        ]
     )
-    def update_pollutant_data(pollutant):
-        if pollutant == 'PM 2.5':
-            return pm25_data.to_dict('records')
+])
 
-        return pm10_data.to_dict('records')
 
-    @callback(
-        Output('map-figure', 'figure', allow_duplicate=True),
-        Output('graph-figure', 'children', allow_duplicate=True),
-        Output('datatable-container', 'children'),
-        Output('region-dropdown', 'value', allow_duplicate=True),
-        Output('pollutant-gauge-24hr', 'max', allow_duplicate=True),
-        Output('pollutant-gauge-7day', 'max', allow_duplicate=True),
-        Output('pollutant-gauge-24hr', 'color', allow_duplicate=True),
-        Output('pollutant-gauge-7day', 'color', allow_duplicate=True),
-        Output('pollutant-gauge-24hr', 'value', allow_duplicate=True),
-        Output('pollutant-gauge-7day', 'value', allow_duplicate=True),
-        Input('pollutant-data-store', 'data'),
-        State('pollutant-dropdown', 'value'),
-        State('region-dropdown', 'value'),
-        State('display-type-dropdown', 'value'),
-        prevent_initial_call=True
-    )
-    def handle_data_update(data, pollutant, region, display_type):
-        df = pd.DataFrame(data)
-        map_fig = generate_map(df, pollutant, display_type)
-        graph = get_default_graph(df, pollutant)
-        table = generate_table(df, pollutant)
-        gauge_max, gauge_colors = get_gauge_params(pollutant)
+# Callback functions that update the Dash components.
+@callback(
+    Output('pollutant-data-store', 'data'),
+    Input('pollutant-dropdown', 'value')
+)
+def update_pollutant_data(pollutant):
+    if pollutant == 'PM 2.5':
+        return pm25_data.to_dict('records')
 
-        return map_fig, graph, table, region, gauge_max, gauge_max, gauge_colors, gauge_colors, 0, 0
+    return pm10_data.to_dict('records')
 
-    @callback(
-        Output('map-figure', 'figure', allow_duplicate=True),
-        Input('region-dropdown', 'value'),
-        State('map-figure', 'figure'),
-        prevent_initial_call=True
-    )
-    def region_focus(region, map_fig):
-        coordinates = {
-            'Show All': [17, 17, 1],
-            'North America': [55.8457, -103.6386, 2],
-            'South America': [-25.5, -61, 2.25],
-            'Central America': [18, -90, 4],
-            'Europe': [57, 16, 2],
-            'Africa': [-1, 19.75, 2.3],
-            'Asia': [28.33, 86.67, 2.3],
-            'Oceania': [-31.55, 137.2, 2.3]
-        }
+@callback(
+    Output('map-figure', 'figure', allow_duplicate=True),
+    Output('graph-figure', 'children', allow_duplicate=True),
+    Output('datatable-container', 'children'),
+    Output('region-dropdown', 'value', allow_duplicate=True),
+    Output('pollutant-gauge-24hr', 'max', allow_duplicate=True),
+    Output('pollutant-gauge-7day', 'max', allow_duplicate=True),
+    Output('pollutant-gauge-24hr', 'color', allow_duplicate=True),
+    Output('pollutant-gauge-7day', 'color', allow_duplicate=True),
+    Output('pollutant-gauge-24hr', 'value', allow_duplicate=True),
+    Output('pollutant-gauge-7day', 'value', allow_duplicate=True),
+    Input('pollutant-data-store', 'data'),
+    State('pollutant-dropdown', 'value'),
+    State('region-dropdown', 'value'),
+    State('display-type-dropdown', 'value'),
+    prevent_initial_call=True
+)
+def handle_data_update(data, pollutant, region, display_type):
+    df = pd.DataFrame(data)
+    map_fig = generate_map(df, pollutant, display_type)
+    graph = get_default_graph(df, pollutant)
+    table = generate_table(df, pollutant)
+    gauge_max, gauge_colors = get_gauge_params(pollutant)
 
-        lat, lon, zoom = coordinates[region]
-        map_fig = go.Figure(map_fig)
-        map_fig.update_layout(mapbox=dict(center=dict(lat=lat, lon=lon)))
-        map_fig.update_layout(mapbox=dict(zoom=zoom))
+    return map_fig, graph, table, region, gauge_max, gauge_max, gauge_colors, gauge_colors, 0, 0
 
-        return map_fig
+@callback(
+    Output('map-figure', 'figure', allow_duplicate=True),
+    Input('region-dropdown', 'value'),
+    State('map-figure', 'figure'),
+    prevent_initial_call=True
+)
+def region_focus(region, map_fig):
+    coordinates = {
+        'Show All': [17, 17, 1],
+        'North America': [55.8457, -103.6386, 2],
+        'South America': [-25.5, -61, 2.25],
+        'Central America': [18, -90, 4],
+        'Europe': [57, 16, 2],
+        'Africa': [-1, 19.75, 2.3],
+        'Asia': [28.33, 86.67, 2.3],
+        'Oceania': [-31.55, 137.2, 2.3]
+    }
 
-    @callback(
-        Output('map-figure', 'figure', allow_duplicate=True),
-        Output('region-dropdown', 'value'),
-        State('pollutant-data-store', 'data'),
-        State('pollutant-dropdown', 'value'),
-        State('region-dropdown', 'value'),
-        Input('display-type-dropdown', 'value'),
-        prevent_initial_call=True
-    )
-    def update_map_type(data, pollutant, region, display_type):
-        if not data:
-            raise PreventUpdate
-        df = pd.DataFrame(data)
-        fig = generate_map(df, pollutant, display_type)
+    lat, lon, zoom = coordinates[region]
+    map_fig = go.Figure(map_fig)
+    map_fig.update_layout(mapbox=dict(center=dict(lat=lat, lon=lon)))
+    map_fig.update_layout(mapbox=dict(zoom=zoom))
 
-        return fig, region
+    return map_fig
 
-    @callback(
-        Output('graph-figure', 'children', allow_duplicate=True),
-        Output('pollutant-gauge-24hr', 'value', allow_duplicate=True),
-        Output('pollutant-gauge-7day', 'value', allow_duplicate=True),
-        Output('analytics-data-alert', 'children', allow_duplicate=True),
-        Output('analytics-data-alert', 'is_open', allow_duplicate=True),
-        Input('map-figure', 'clickData'),
-        State('pollutant-dropdown', 'value'),
-        State('pollutant-data-store', 'data'),
-        prevent_initial_call=True
-    )
-    def handle_map_marker_click(click_data, pollutant, data):
-        if not click_data:
-            return no_update
+@callback(
+    Output('map-figure', 'figure', allow_duplicate=True),
+    Output('region-dropdown', 'value'),
+    State('pollutant-data-store', 'data'),
+    State('pollutant-dropdown', 'value'),
+    State('region-dropdown', 'value'),
+    Input('display-type-dropdown', 'value'),
+    prevent_initial_call=True
+)
+def update_map_type(data, pollutant, region, display_type):
+    if not data:
+        raise PreventUpdate
+    df = pd.DataFrame(data)
+    fig = generate_map(df, pollutant, display_type)
 
-        df = pd.DataFrame(click_data['points'])
-        location_id = str(df['customdata'][0][0])
-        location_name = df['customdata'][0][1]
-        success, response = get_recent_data(location_id, pollutant)
-        if success and not response.empty:
-            graph = generate_graph(response, pollutant)
-            avg_24hr, avg_7day = get_averages(response)
-            return graph, avg_24hr, avg_7day, None, False
+    return fig, region
+
+@callback(
+    Output('graph-figure', 'children', allow_duplicate=True),
+    Output('pollutant-gauge-24hr', 'value', allow_duplicate=True),
+    Output('pollutant-gauge-7day', 'value', allow_duplicate=True),
+    Output('analytics-data-alert', 'children', allow_duplicate=True),
+    Output('analytics-data-alert', 'is_open', allow_duplicate=True),
+    Input('map-figure', 'clickData'),
+    State('pollutant-dropdown', 'value'),
+    State('pollutant-data-store', 'data'),
+    prevent_initial_call=True
+)
+def handle_map_marker_click(click_data, pollutant, data):
+    if not click_data:
+        return no_update
+
+    df = pd.DataFrame(click_data['points'])
+    location_id = str(df['customdata'][0][0])
+    location_name = df['customdata'][0][1]
+    success, response = get_recent_data(location_id, pollutant)
+    if success and not response.empty:
+        graph = generate_graph(response, pollutant)
+        avg_24hr, avg_7day = get_averages(response)
+        return graph, avg_24hr, avg_7day, None, False
+    else:
+        all_data = pd.DataFrame(data)
+        graph = get_default_graph(all_data, pollutant)
+        if location_name:
+            alert = f'Recent data for {location_name} is unavailable.'
         else:
-            all_data = pd.DataFrame(data)
-            graph = get_default_graph(all_data, pollutant)
-            if location_name:
-                alert = f'Recent data for {location_name} is unavailable.'
-            else:
-                alert = 'Recent data is unavailable.'
-            return graph, 0, 0, alert, True
+            alert = 'Recent data is unavailable.'
+        return graph, 0, 0, alert, True
 
-    @callback(
-        Output('graph-figure', 'children', allow_duplicate=True),
-        Output('map-figure', 'figure', allow_duplicate=True),
-        Output('pollutant-gauge-24hr', 'value', allow_duplicate=True),
-        Output('pollutant-gauge-7day', 'value', allow_duplicate=True),
-        Output('analytics-data-alert', 'children', allow_duplicate=True),
-        Output('analytics-data-alert', 'is_open', allow_duplicate=True),
-        Input('data-table', 'selectedRows'),
-        State('pollutant-dropdown', 'value'),
-        State('pollutant-data-store', 'data'),
-        State('map-figure', 'figure'),
-        prevent_initial_call=True
-    )
-    def handle_table_click(selected_row, pollutant, data, map_fig):
-        if not selected_row:
-            return no_update
-        else:
-            location_id = str(selected_row[0]['id'])
-            location_name = selected_row[0]['name']
-            lat, lon = map(float, selected_row[0]['coordinates'].split(','))
-            focused_map = go.Figure(map_fig)
-            focused_map.update_layout(mapbox=dict(center=dict(lat=lat)))
-            focused_map.update_layout(mapbox=dict(center=dict(lon=lon)))
-            focused_map.update_layout(mapbox=dict(zoom=18))
-            success, response = get_recent_data(location_id, pollutant)
-            if success and not response.empty:
-                graph = generate_graph(response, pollutant)
-                avg_24hr, avg_7day = get_averages(response)
-                return graph, focused_map, avg_24hr, avg_7day, None, False
-            else:
-                all_data = pd.DataFrame(data)
-                graph = get_default_graph(all_data, pollutant)
-                if location_name:
-                    alert = f'Recent data for {location_name} is unavailable.'
-                else:
-                    alert = 'Recent data is unavailable.'
-                return graph, focused_map, 0, 0, alert, True
-
-    @callback(
-        Output('graph-figure', 'children', allow_duplicate=True),
-        Output('map-figure', 'figure'),
-        Output('pollutant-gauge-24hr', 'value', allow_duplicate=True),
-        Output('pollutant-gauge-7day', 'value', allow_duplicate=True),
-        Output('analytics-data-alert', 'children'),
-        Output('analytics-data-alert', 'is_open'),
-        Input('default-graph', 'clickData'),
-        State('pollutant-dropdown', 'value'),
-        State('pollutant-data-store', 'data'),
-        State('map-figure', 'figure'),
-        prevent_initial_call=True
-    )
-    def handle_default_graph_click(click_data, pollutant, data, map_fig):
-        if not click_data:
-            raise PreventUpdate
-
-        location_id = str(click_data['points'][0]['customdata'][0])
-        location_name = click_data['points'][0]['customdata'][1]
-        lat = click_data['points'][0]['customdata'][2]
-        lon = click_data['points'][0]['customdata'][3]
+@callback(
+    Output('graph-figure', 'children', allow_duplicate=True),
+    Output('map-figure', 'figure', allow_duplicate=True),
+    Output('pollutant-gauge-24hr', 'value', allow_duplicate=True),
+    Output('pollutant-gauge-7day', 'value', allow_duplicate=True),
+    Output('analytics-data-alert', 'children', allow_duplicate=True),
+    Output('analytics-data-alert', 'is_open', allow_duplicate=True),
+    Input('data-table', 'selectedRows'),
+    State('pollutant-dropdown', 'value'),
+    State('pollutant-data-store', 'data'),
+    State('map-figure', 'figure'),
+    prevent_initial_call=True
+)
+def handle_table_click(selected_row, pollutant, data, map_fig):
+    if not selected_row:
+        return no_update
+    else:
+        location_id = str(selected_row[0]['id'])
+        location_name = selected_row[0]['name']
+        lat, lon = map(float, selected_row[0]['coordinates'].split(','))
         focused_map = go.Figure(map_fig)
         focused_map.update_layout(mapbox=dict(center=dict(lat=lat)))
         focused_map.update_layout(mapbox=dict(center=dict(lon=lon)))
@@ -906,8 +892,45 @@ def main():
                 alert = 'Recent data is unavailable.'
             return graph, focused_map, 0, 0, alert, True
 
-    app.run(debug=True)
+@callback(
+    Output('graph-figure', 'children', allow_duplicate=True),
+    Output('map-figure', 'figure'),
+    Output('pollutant-gauge-24hr', 'value', allow_duplicate=True),
+    Output('pollutant-gauge-7day', 'value', allow_duplicate=True),
+    Output('analytics-data-alert', 'children'),
+    Output('analytics-data-alert', 'is_open'),
+    Input('default-graph', 'clickData'),
+    State('pollutant-dropdown', 'value'),
+    State('pollutant-data-store', 'data'),
+    State('map-figure', 'figure'),
+    prevent_initial_call=True
+)
+def handle_default_graph_click(click_data, pollutant, data, map_fig):
+    if not click_data:
+        raise PreventUpdate
+
+    location_id = str(click_data['points'][0]['customdata'][0])
+    location_name = click_data['points'][0]['customdata'][1]
+    lat = click_data['points'][0]['customdata'][2]
+    lon = click_data['points'][0]['customdata'][3]
+    focused_map = go.Figure(map_fig)
+    focused_map.update_layout(mapbox=dict(center=dict(lat=lat)))
+    focused_map.update_layout(mapbox=dict(center=dict(lon=lon)))
+    focused_map.update_layout(mapbox=dict(zoom=18))
+    success, response = get_recent_data(location_id, pollutant)
+    if success and not response.empty:
+        graph = generate_graph(response, pollutant)
+        avg_24hr, avg_7day = get_averages(response)
+        return graph, focused_map, avg_24hr, avg_7day, None, False
+    else:
+        all_data = pd.DataFrame(data)
+        graph = get_default_graph(all_data, pollutant)
+        if location_name:
+            alert = f'Recent data for {location_name} is unavailable.'
+        else:
+            alert = 'Recent data is unavailable.'
+        return graph, focused_map, 0, 0, alert, True
 
 
 if __name__ == '__main__':
-    main()
+    app.run_server(debug=True)
