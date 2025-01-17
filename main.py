@@ -721,6 +721,7 @@ app.layout = html.Div([
                                 href=GITHUB,
                                 children=[
                                     html.Img(
+                                        alt='Github Logo',
                                         src='/assets/github-brands-solid.svg',
                                     )
                                 ]
@@ -731,6 +732,7 @@ app.layout = html.Div([
                                 href=LINKEDIN,
                                 children=[
                                     html.Img(
+                                        alt='LinkedIn Logo',
                                         src='/assets/linkedin-brands-solid.svg',
                                     )
                                 ]
