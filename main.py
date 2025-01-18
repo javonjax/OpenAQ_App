@@ -553,7 +553,12 @@ app.layout = html.Div([
                      children=
                      [
                          dcc.Loading(
-                             dcc.Graph(id='map-figure', figure=DEFAULT_MAP_FIGURE, style={'height': '65vh'}),
+                             dcc.Graph(
+                                 id='map-figure',
+                                 figure=DEFAULT_MAP_FIGURE,
+                                 style={'height': '65vh'},
+                                 config={'scrollZoom': True}
+                             ),
                              delay_hide=300
                          ),
                          html.Div(className='map-options-container',
@@ -705,40 +710,33 @@ app.layout = html.Div([
             )
         ]
     ),
-    html.Div(
-        style={"width": "100%", "display": "flex", "justify-content": "center"},
+    html.Footer(
+        className='app-footer',
         children=[
-            html.Footer(
-                className='about-me',
+            html.Div('Created by Javon Jackson'),
+            html.Div(
+                className='external-links',
                 children=[
-                    html.Div('Created by Javon Jackson'),
-                    html.Div(
-                        className='external-links',
+                    html.A(
+                        target='_blank',
+                        href=GITHUB,
                         children=[
-                            html.A(
-                                style={"width": "50px", "height": "50px", "padding": "4px"},
-                                target='_blank',
-                                href=GITHUB,
-                                children=[
-                                    html.Img(
-                                        alt='Github Logo',
-                                        src='/assets/github-brands-solid.svg',
-                                    )
-                                ]
-                            ),
-                            html.A(
-                                style={"width": "50px", "height": "50px", "padding": "4px"},
-                                target='_blank',
-                                href=LINKEDIN,
-                                children=[
-                                    html.Img(
-                                        alt='LinkedIn Logo',
-                                        src='/assets/linkedin-brands-solid.svg',
-                                    )
-                                ]
-                            )]
-                    )
-                ]
+                            html.Img(
+                                alt='Github Logo',
+                                src='/assets/github-brands-solid.svg',
+                            )
+                        ]
+                    ),
+                    html.A(
+                        target='_blank',
+                        href=LINKEDIN,
+                        children=[
+                            html.Img(
+                                alt='LinkedIn Logo',
+                                src='/assets/linkedin-brands-solid.svg',
+                            )
+                        ]
+                    )]
             )
         ]
     )
