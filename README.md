@@ -1,4 +1,5 @@
 # Global Air Quality Dashboard
+🚧 This application is under construction following changes to the OpenAQ API. 🚧
 
 ## Description
 
