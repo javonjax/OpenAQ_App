@@ -1,5 +1,4 @@
 # Global Air Quality Dashboard
-🚧 This application is under construction following changes to the OpenAQ API. 🚧
 
 ## Description
 
@@ -60,3 +59,5 @@ are small enough to be inhaled, meaning they can get deep into the lungs and the
 Monitoring air quality is important for public health and environmental reasons. Both PM 10 and PM 2.5 can cause or worsen health problems, especially in 
 vulnerable populations such as children and the elderly. Particulate matter data can also help with identifying sources of pollution, monitoring the effects of
 natural events such as wildfires and volcanic eruptions, and tracking changes in ecosystems over time.
+
+🚧 This application is under construction following changes to the OpenAQ API. 🚧
